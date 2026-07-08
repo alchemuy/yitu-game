@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>易途 - 周易八卦入门</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--paper:#F5F0E8;--ink:#2C2C2C;--red:#C41E1E;--gold:#B8860B;--ink-light:#5A5A5A;--ink-faint:#999;--card-bg:#FFFDF5;--border:#D4C5A9;}
+html,body{height:100%;overflow:hidden}
+body{font-family:"Songti SC","STSong","SimSun",serif;background:var(--paper);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background-image:radial-gradient(ellipse at 20% 50%,rgba(200,180,140,0.12) 0%,transparent 70%),radial-gradient(ellipse at 80% 20%,rgba(180,160,120,0.08) 0%,transparent 60%);}
+.screen{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;position:absolute;top:0;left:0;padding:20px;text-align:center;overflow-y:auto}
+.screen.active{display:flex}
+.hidden{display:none!important}
+#title-screen .title{font-size:clamp(2.5rem,10vw,4rem);color:var(--ink);letter-spacing:0.3em;margin-bottom:8px;text-shadow:2px 2px 4px rgba(0,0,0,0.1);}
+#title-screen .subtitle{font-size:clamp(0.9rem,3vw,1.1rem);color:var(--ink-light);letter-spacing:0.5em;margin-bottom:40px;}
+.btn{display:inline-block;padding:14px 40px;background:transparent;color:var(--ink);border:1.5px solid var(--ink);border-radius:4px;font-size:1rem;font-family:inherit;letter-spacing:0.2em;cursor:pointer;transition:all 0.3s;margin:8px;text-decoration:none;}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn-primary{background:var(--ink);color:var(--paper)}
+.btn-primary:hover{background:transparent;color:var(--ink)}
+.ink-dot{width:6px;height:6px;background:var(--ink);border-radius:50%;display:inline-block;margin:0 8px;opacity:0.4;}
+#chapter-screen .screen-title{font-size:clamp(1.5rem,5vw,2rem);letter-spacing:0.2em;margin-bottom:30px;}
+.chapter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;max-width:600px;width:100%;padding:0 10px;}
+.chapter-card{padding:16px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card-bg);cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden;}
+.chapter-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.chapter-card.locked{opacity:0.5;cursor:not-allowed;filter:grayscale(0.8)}
+.chapter-card.locked:hover{transform:none;box-shadow:none}
+.chapter-card .ch-num{font-size:0.75rem;color:var(--ink-faint);letter-spacing:0.1em;}
+.chapter-card .ch-name{font-size:1.1rem;margin:6px 0 4px;letter-spacing:0.1em;}
+.chapter-card .ch-sub{font-size:0.75rem;color:var(--ink-light)}
+.chapter-card .lock-icon{font-size:1.2rem;margin-top:6px;display:block}
+.exp-bar-container{width:100%;max-width:400px;height:8px;background:var(--border);border-radius:4px;margin:20px 0 10px;overflow:hidden;}
+.exp-bar-fill{height:100%;background:var(--gold);border-radius:4px;transition:width 0.5s}
+.exp-label{font-size:0.8rem;color:var(--ink-faint);letter-spacing:0.1em}
+#game-screen{padding:0;justify-content:flex-start}
+.game-header{width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(245,240,232,0.95);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;}
+.game-header .gh-left{display:flex;align-items:center;gap:10px}
+.game-header .gh-back{font-size:1.2rem;cursor:pointer;padding:4px 8px}
+.game-header .gh-title{font-size:0.95rem;letter-spacing:0.1em}
+.game-header .gh-exp{font-size:0.8rem;color:var(--gold)}
+.game-body{flex:1;width:100%;display:flex;flex-direction:column;align-items:center;padding:16px;overflow-y:auto;}
+.tutorial-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(44,44,44,0.85);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;}
+.tutorial-box{background:var(--paper);border:1.5px solid var(--border);border-radius:8px;max-width:500px;width:100%;padding:24px 20px;position:relative;max-height:85vh;overflow-y:auto;}
+.tutorial-box .tut-title{font-size:1.2rem;letter-spacing:0.15em;margin-bottom:14px;text-align:center;}
+.tutorial-box .tut-text{font-size:0.9rem;line-height:1.8;color:var(--ink-light);margin-bottom:16px;text-align:left;}
+.tutorial-box .tut-hint{background:rgba(184,134,11,0.1);border-left:3px solid var(--gold);padding:10px 12px;margin:12px 0;font-size:0.85rem;line-height:1.7;}
+.tutorial-box .tut-btn{display:block;width:100%;padding:12px;border:none;border-radius:4px;background:var(--ink);color:var(--paper);font-size:0.95rem;font-family:inherit;letter-spacing:0.15em;cursor:pointer;margin-top:10px;}
+.tut-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:0.85rem;}
+.tut-table th,.tut-table td{border:1px solid var(--border);padding:6px 8px;text-align:center;}
+.tut-table th{background:rgba(184,134,11,0.1);color:var(--gold);font-weight:normal;letter-spacing:0.05em;}
+.tut-table td{color:var(--ink-light)}
+.match-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-width:420px;width:100%;margin:16px 0;}
+.match-card{aspect-ratio:3/4;background:var(--card-bg);border:1.5px solid var(--border);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;font-size:1.3rem;position:relative;overflow:hidden;padding:4px;}
+.match-card .card-gan{font-size:1.6rem;font-weight:bold}
+.match-card .card-yin{font-size:0.75rem;color:var(--ink-faint);margin-top:2px}
+.match-card .card-wuxing{font-size:0.7rem;color:var(--gold);margin-top:2px}
+.match-card.flipped{border-color:var(--gold);background:#FFF8E7}
+.match-card.matched{border-color:var(--red);color:var(--red);background:rgba(196,30,30,0.05);cursor:default;}
+.match-card .match-effect{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.5rem;opacity:0;animation:fadeUp 0.8s ease-out;}
+@keyframes fadeUp{0%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:0;transform:translate(-50%,-120%)}}
+.match-info{display:flex;justify-content:space-between;width:100%;max-width:420px;font-size:0.85rem;color:var(--ink-light);padding:0 4px;}
+.bagua-learn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:440px;width:100%;margin:16px 0;}
+.bagua-learn-card{background:var(--card-bg);border:1px solid var(--border);border-radius:6px;padding:10px 6px;text-align:center;cursor:pointer;transition:all 0.3s;}
+.bagua-learn-card .bl-symbol{font-size:1.8rem;margin-bottom:4px}
+.bagua-learn-card .bl-name{font-size:0.85rem;letter-spacing:0.1em}
+.bagua-learn-card .bl-wuxing{font-size:0.7rem;color:var(--gold);margin-top:2px}
+.bagua-learn-card .bl-dir{font-size:0.65rem;color:var(--ink-faint);margin-top:2px}
+.bagua-learn-card:hover{transform:scale(1.03);box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.bagua-learn-card.learned{border-color:var(--gold);background:#FFF8E7}
+.learn-progress{font-size:0.85rem;color:var(--ink-light);margin:8px 0;letter-spacing:0.05em;}
+.test-area{width:100%;max-width:440px;margin:16px 0;}
+.test-question{font-size:1rem;margin-bottom:16px;line-height:1.6;}
+.test-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.test-opt{padding:12px;border:1px solid var(--border);border-radius:6px;background:var(--card-bg);cursor:pointer;font-size:0.9rem;font-family:inherit;transition:all 0.2s;}
+.test-opt:hover{border-color:var(--gold)}
+.test-opt.correct{border-color:var(--red);color:var(--red);background:rgba(196,30,30,0.05)}
+.test-opt.wrong{border-color:#999;color:#999}
+.wrong-explain{font-size:0.8rem;color:var(--ink-light);margin-top:8px;padding:8px;background:rgba(0,0,0,0.03);border-radius:4px;line-height:1.6;text-align:left;}
+.wrong-next-btn{display:block;width:100%;padding:10px;border:none;border-radius:4px;background:var(--ink);color:var(--paper);font-size:0.9rem;font-family:inherit;letter-spacing:0.1em;cursor:pointer;margin-top:10px;}
+.pillar-display{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:400px;width:100%;margin:16px 0;}
+.pillar-slot{background:var(--card-bg);border:1.5px solid var(--border);border-radius:6px;padding:10px 6px;text-align:center;}
+.pillar-slot .ps-label{font-size:0.7rem;color:var(--ink-faint);margin-bottom:6px;letter-spacing:0.1em;}
+.pillar-slot .ps-gan{font-size:1.3rem;font-weight:bold}
+.pillar-slot .ps-zhi{font-size:1rem;margin-top:4px}
+.pillar-slot .ps-day-master{font-size:0.65rem;color:var(--red);margin-top:4px;letter-spacing:0.05em;}
+.quiz-area{width:100%;max-width:420px;margin:16px 0}
+.quiz-q{font-size:0.95rem;margin-bottom:12px;line-height:1.6}
+.quiz-opts{display:flex;flex-direction:column;gap:8px}
+.quiz-opt{padding:12px 14px;border:1px solid var(--border);border-radius:6px;background:var(--card-bg);cursor:pointer;font-size:0.9rem;font-family:inherit;text-align:left;transition:all 0.2s;}
+.quiz-opt:hover{border-color:var(--gold)}
+.quiz-opt.correct{border-color:var(--red);color:var(--red);background:rgba(196,30,30,0.05)}
+.quiz-opt.wrong{border-color:#999;color:#999}
+.quiz-explain{font-size:0.8rem;color:var(--ink-light);margin-top:8px;padding:8px;background:rgba(0,0,0,0.03);border-radius:4px;line-height:1.6;text-align:left;}
+.scale-container{width:100%;max-width:400px;margin:20px 0;}
+.scale-step{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;}
+.scale-step .ss-title{font-size:0.9rem;letter-spacing:0.1em;margin-bottom:10px;}
+.scale-step .ss-explain{font-size:0.8rem;color:var(--ink-light);margin:8px 0;padding:8px;background:rgba(184,134,11,0.08);border-radius:4px;line-height:1.7;}
+.scale-step .ss-options{display:flex;gap:8px;flex-wrap:wrap}
+.scale-opt{padding:8px 14px;border:1px solid var(--border);border-radius:4px;background:var(--paper);cursor:pointer;font-size:0.85rem;font-family:inherit;transition:all 0.2s;}
+.scale-opt:hover{border-color:var(--gold)}
+.scale-opt.selected{border-color:var(--red);color:var(--red);background:rgba(196,30,30,0.05)}
+.scale-result{margin-top:20px;padding:16px;background:var(--card-bg);border:1.5px solid var(--gold);border-radius:8px;max-width:400px;width:100%;}
+.scale-result .sr-title{font-size:1.1rem;letter-spacing:0.1em;margin-bottom:10px;}
+.scale-result .sr-text{font-size:0.9rem;line-height:1.7;color:var(--ink-light)}
+.ss-question-area{width:100%;max-width:420px;margin:16px 0;text-align:center}
+.ss-timer{font-size:0.85rem;color:var(--ink-faint);margin-bottom:12px;letter-spacing:0.1em;}
+.ss-card-display{background:var(--card-bg);border:2px solid var(--ink);border-radius:8px;padding:20px;margin-bottom:16px;}
+.ss-card-display .ss-relation{font-size:1.1rem;margin-bottom:8px;line-height:1.6}
+.ss-options-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.ss-opt-btn{padding:10px 6px;border:1px solid var(--border);border-radius:6px;background:var(--card-bg);cursor:pointer;font-size:0.85rem;font-family:inherit;transition:all 0.2s;}
+.ss-opt-btn:hover{border-color:var(--gold)}
+.ss-opt-btn.correct{border-color:var(--red);color:var(--red)}
+.ss-opt-btn.wrong{opacity:0.5}
+.ss-feedback{margin-top:12px;font-size:0.85rem;min-height:24px;line-height:1.6;text-align:left;}
+.reading-step{width:100%;max-width:440px;margin:16px 0;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:18px;}
+.reading-step .rs-title{font-size:0.95rem;letter-spacing:0.1em;margin-bottom:10px;color:var(--gold);}
+.reading-step .rs-content{font-size:0.9rem;line-height:1.7;color:var(--ink-light)}
+.final-report{width:100%;max-width:440px;margin:16px 0;background:var(--card-bg);border:1.5px solid var(--gold);border-radius:8px;padding:20px;text-align:left;}
+.final-report .fr-title{font-size:1.2rem;text-align:center;letter-spacing:0.15em;margin-bottom:16px;color:var(--ink);}
+.final-report .fr-section{margin-bottom:14px}
+.final-report .fr-section-title{font-size:0.9rem;color:var(--gold);letter-spacing:0.1em;margin-bottom:6px;}
+.final-report .fr-section-text{font-size:0.85rem;line-height:1.7;color:var(--ink-light)}
+.result-screen{text-align:center}
+.result-screen .rs-icon{font-size:3rem;margin-bottom:16px}
+.result-screen .rs-title{font-size:1.5rem;letter-spacing:0.15em;margin-bottom:12px;}
+.result-screen .rs-desc{font-size:0.9rem;color:var(--ink-light);line-height:1.7;max-width:360px;margin:0 auto 20px;}
+.result-screen .rs-exp{font-size:0.9rem;color:var(--gold);letter-spacing:0.1em;margin-bottom:20px;}
+@media(max-width:480px){.match-grid{grid-template-columns:repeat(4,1fr);gap:6px}.match-card .card-gan{font-size:1.3rem}.bagua-learn-grid{grid-template-columns:repeat(2,1fr)}.chapter-grid{grid-template-columns:repeat(2,1fr)}.pillar-display{grid-template-columns:repeat(2,1fr)}.ss-options-grid{grid-template-columns:repeat(2,1fr)}.test-options{grid-template-columns:1fr}.tutorial-box{padding:18px 14px;}.tut-table{font-size:0.78rem;}}
+/* 第4关 铜钱起卦 */
+.coin-area{display:flex;justify-content:center;align-items:center;margin:20px 0;min-height:120px;}
+.coin{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#d4a017,#b8860b);border:3px solid #8B6914;display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:#FFFDF5;cursor:pointer;transition:transform 0.2s;box-shadow:0 4px 12px rgba(0,0,0,0.2);user-select:none;font-weight:bold;}
+.coin:hover{transform:scale(1.05)}
+.coin.flipping{animation:coinFlip 0.6s ease-in-out;}
+@keyframes coinFlip{0%{transform:rotateY(0)}50%{transform:rotateY(1800deg) scale(1.1)}100%{transform:rotateY(3600deg) scale(1)}}
+.coin-result{font-size:0.9rem;color:var(--gold);margin:10px 0;letter-spacing:0.1em;}
+.gua-line{display:flex;align-items:center;gap:10px;margin:4px 0;font-size:0.85rem;justify-content:center;}
+.gua-yao{display:flex;gap:6px;justify-content:center;}
+.yao-yang{width:60px;height:4px;background:var(--ink);border-radius:2px;}
+.yao-yin{display:flex;gap:8px;}
+.yao-yin span{width:24px;height:4px;background:var(--ink);border-radius:2px;display:inline-block;}
+.gua-display{margin:20px auto;max-width:200px;text-align:center;}
+.gua-display .gua-name{font-size:1.1rem;letter-spacing:0.15em;margin-bottom:12px;}
+.gua-display .gua-desc{font-size:0.85rem;color:var(--ink-light);line-height:1.7;margin-top:12px;}
+.pillar-display{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:400px;width:100%;margin:16px 0;}
+@media(min-width:768px){.screen{padding:30px}.match-grid{grid-template-columns:repeat(5,1fr);max-width:500px}.match-card .card-gan{font-size:1.6rem}}
+</style>
+</head>
+<body>
+<div id="title-screen" class="screen active">
+  <div class="title">易途</div>
+  <div class="subtitle">周易八卦入门</div>
+  <div style="margin:20px 0"><span class="ink-dot"></span><span class="ink-dot"></span><span class="ink-dot"></span></div>
+  <button class="btn btn-primary" onclick="showTutorial(0)" style="margin-top:20px">入山求道</button>
+  <button class="btn" onclick="showChapterSelect()" style="margin-top:10px;font-size:0.85rem">继续修行</button>
+</div>
+<div id="tutorial-overlay" class="tutorial-overlay hidden">
+  <div class="tutorial-box">
+    <div class="tut-title" id="tut-title"></div>
+    <div class="tut-text" id="tut-text"></div>
+    <div class="tut-hint" id="tut-hint"></div>
+    <button class="tut-btn" id="tut-btn"></button>
+  </div>
+</div>
+<div id="chapter-screen" class="screen">
+  <div class="screen-title">选择修行之路</div>
+  <div class="exp-bar-container"><div class="exp-bar-fill" id="exp-fill" style="width:0%"></div></div>
+  <div class="exp-label" id="exp-label">五行精气: 木0 火0 土0 金0 水0 | 等级: 求道者</div>
+  <div class="chapter-grid" id="chapter-grid"></div>
+  <button class="btn" onclick="showTitle()" style="margin-top:20px;font-size:0.85rem">返回</button>
+</div>
+<div id="game-screen" class="screen">
+  <div class="game-header">
+    <div class="gh-left"><span class="gh-back" onclick="exitGame()">&larr;</span><span class="gh-title" id="gh-title"></span></div>
+    <div class="gh-exp" id="gh-exp"></div>
+  </div>
+  <div class="game-body" id="game-body"></div>
+</div>
+<div id="result-screen" class="screen result-screen">
+  <div class="rs-icon" id="rs-icon"></div>
+  <div class="rs-title" id="rs-title"></div>
+  <div class="rs-desc" id="rs-desc"></div>
+  <div class="rs-exp" id="rs-exp"></div>
+  <button class="btn" onclick="showChapterSelect()" style="margin:8px">继续修行</button>
+  <button class="btn" id="rs-next-btn" onclick="" style="margin:8px;display:none">下一关</button>
+</div>
+<script>
+
+const TIANGAN = [
+  {gan:"甲",yin:true,wuxing:"wood"},
+  {gan:"乙",yin:false,wuxing:"wood"},
+  {gan:"丙",yin:true,wuxing:"fire"},
+  {gan:"丁",yin:false,wuxing:"fire"},
+  {gan:"戊",yin:true,wuxing:"earth"},
+  {gan:"己",yin:false,wuxing:"earth"},
+  {gan:"庚",yin:true,wuxing:"metal"},
+  {gan:"辛",yin:false,wuxing:"metal"},
+  {gan:"壬",yin:true,wuxing:"water"},
+  {gan:"癸",yin:false,wuxing:"water"},
+];
+
+// 十二地支：名称、五行、月份（农历）、生肖
+const DIZHI = [
+  {zhi:"子",wuxing:"water",month:"冬月",animal:"鼠"},
+  {zhi:"丑",wuxing:"earth",month:"腊月",animal:"牛"},
+  {zhi:"寅",wuxing:"wood",month:"正月",animal:"虎"},
+  {zhi:"卯",wuxing:"wood",month:"二月",animal:"兔"},
+  {zhi:"辰",wuxing:"earth",month:"三月",animal:"龙"},
+  {zhi:"巳",wuxing:"fire",month:"四月",animal:"蛇"},
+  {zhi:"午",wuxing:"fire",month:"五月",animal:"马"},
+  {zhi:"未",wuxing:"earth",month:"六月",animal:"羊"},
+  {zhi:"申",wuxing:"metal",month:"七月",animal:"猴"},
+  {zhi:"酉",wuxing:"metal",month:"八月",animal:"鸡"},
+  {zhi:"戌",wuxing:"earth",month:"九月",animal:"狗"},
+  {zhi:"亥",wuxing:"water",month:"十月",animal:"猪"},
+];
+
+const BAGUA = [
+  {name:"乾",symbol:"☰",wuxing:"metal",dir:"西北",nature:"天",meaning:"刚健、领导力、父亲"},
+  {name:"坤",symbol:"☷",wuxing:"earth",dir:"西南",nature:"地",meaning:"包容、稳定、母亲"},
+  {name:"震",symbol:"☳",wuxing:"wood",dir:"东",nature:"雷",meaning:"开拓、冲动、长男"},
+  {name:"巽",symbol:"☴",wuxing:"wood",dir:"东南",nature:"风",meaning:"细腻、谋划、长女"},
+  {name:"坎",symbol:"☵",wuxing:"water",dir:"北",nature:"水",meaning:"智慧、财运、中男"},
+  {name:"离",symbol:"☲",wuxing:"fire",dir:"南",nature:"火",meaning:"口才、名气、中女"},
+  {name:"艮",symbol:"☶",wuxing:"earth",dir:"东北",nature:"山",meaning:"保守、积蓄、少男"},
+  {name:"兑",symbol:"☱",wuxing:"metal",dir:"西",nature:"泽",meaning:"社交、才华、少女"},
+];
+
+const WUXING_SHENG = { wood:"water", fire:"wood", earth:"fire", metal:"earth", water:"metal" };
+const WUXING_KE   = { wood:"earth", fire:"metal", earth:"water", metal:"wood", water:"fire" };
+const WX_CN = { wood:"木", fire:"火", earth:"土", metal:"金", water:"水" };
+
+// ===== 状态 =====
+var state = {
+  currentChapter: 0,
+  exp: { wood:0, fire:0, earth:0, metal:0, water:0 },
+  level: 0,
+  chapterCompleted: {},
+  tutorialIdx: 0,
+};
+
+var LEVEL_NAMES = ["求道者","入门弟子","八卦学徒","五行使者","占卜师","命理学徒","日主觉悟者","命理师"];
+var WX_NAMES = { wood:"木气", fire:"火气", earth:"土气", metal:"金气", water:"水气" };
+
+// ===== 存档 =====
+function saveState() {
+  try { localStorage.setItem("yitu_state", JSON.stringify(state)); } catch(e) {}
+}
+function loadState() {
+  try {
+    var s = JSON.parse(localStorage.getItem("yitu_state"));
+    if (s) {
+      state.currentChapter = s.currentChapter || 0;
+      state.exp = s.exp || { wood:0, fire:0, earth:0, metal:0, water:0 };
+      state.level = s.level || 0;
+      state.chapterCompleted = s.chapterCompleted || {};
+    }
+  } catch(e) {}
+}
+
+// ===== 教程系统（含表格）=====
+function showTutorial(idx) {
+  state.tutorialIdx = idx || 0; renderTutorial();
+  document.getElementById("tutorial-overlay").classList.remove("hidden");
+}
+
+function renderTutorial() {
+  var pages = [
+    { // 0
+      title: "入山求道",
+      text: '<p>欢迎来到《易途》。</p>'
+        + '<p style="margin-top:10px">周易是中华文明的源头之一，它不是迷信，是一套理解世界运转方式的象数体系。</p>'
+        + '<p style="margin-top:10px">你将在这里：</p>'
+        + '<ul style="margin:8px 0 8px 20px;line-height:1.8;color:var(--ink-light)">'
+        + '<li>认识阴阳五行的底层逻辑</li>'
+        + '<li>学会天干、地支与八卦的含义</li>'
+        + '<li>掌握八字排盘的基本方法</li>'
+        + '<li>最终能为自己和他人做简单解读</li></ul>',
+      hint: "记住：周易是工具，不是宿命。用它认识自己，而非盲从。"
+    },
+    { // 1 - 阴阳与天干
+      title: "阴阳与天干",
+      text: '<p>阴阳是宇宙的两极：</p>'
+        + '<p style="margin:6px 0">阳 = 主动、明亮、外向、刚健（奇数位天干）<br>'
+        + '阴 = 主静、幽暗、内向、柔顺（偶数位天干）</p>'
+        + '<table class="tut-table" style="margin:12px 0">'
+        + '<tr><th>序号</th><th>天干</th><th>阴阳</th><th>五行</th></tr>'
+        + '<tr><td>1</td><td>甲</td><td>阳</td><td>木</td></tr>'
+        + '<tr><td>2</td><td>乙</td><td>阴</td><td>木</td></tr>'
+        + '<tr><td>3</td><td>丙</td><td>阳</td><td>火</td></tr>'
+        + '<tr><td>4</td><td>丁</td><td>阴</td><td>火</td></tr>'
+        + '<tr><td>5</td><td>戊</td><td>阳</td><td>土</td></tr>'
+        + '<tr><td>6</td><td>己</td><td>阴</td><td>土</td></tr>'
+        + '<tr><td>7</td><td>庚</td><td>阳</td><td>金</td></tr>'
+        + '<tr><td>8</td><td>辛</td><td>阴</td><td>金</td></tr>'
+        + '<tr><td>9</td><td>壬</td><td>阳</td><td>水</td></tr>'
+        + '<tr><td>10</td><td>癸</td><td>阴</td><td>水</td></tr>'
+        + '</table>'
+        + '<p style="font-size:0.82rem;color:var(--ink-faint)">记忆口诀：阳干像白天、男性、主动；阴干像夜晚、女性、主静。</p>',
+      hint: "世界上没有纯阳或纯阴的事物，阴阳总是相互交织、相互转化。"
+    },
+    { // 2 - 地支与五行
+      title: "地支与月份",
+      text: '<p>十二地支对应十二个月（农历），也对应五行和生肖：</p>'
+        + '<table class="tut-table" style="margin:12px 0;font-size:0.82rem">'
+        + '<tr><th>地支</th><th>月份</th><th>五行</th><th>生肖</th><th>旺相</th></tr>'
+        + '<tr><td>寅</td><td>正月</td><td>木</td><td>虎</td><td rowspan="2">木旺于春</td></tr>'
+        + '<tr><td>卯</td><td>二月</td><td>木</td><td>兔</td></tr>'
+        + '<tr><td>巳</td><td>四月</td><td>火</td><td>蛇</td><td rowspan="2">火旺于夏</td></tr>'
+        + '<tr><td>午</td><td>五月</td><td>火</td><td>马</td></tr>'
+        + '<tr><td>辰</td><td>三月</td><td>土</td><td>龙</td><td rowspan="4">土旺于四季末</td></tr>'
+        + '<tr><td>未</td><td>六月</td><td>土</td><td>羊</td></tr>'
+        + '<tr><td>戌</td><td>九月</td><td>土</td><td>狗</td></tr>'
+        + '<tr><td>丑</td><td>腊月</td><td>土</td><td>牛</td></tr>'
+        + '<tr><td>申</td><td>七月</td><td>金</td><td>猴</td><td rowspan="2">金旺于秋</td></tr>'
+        + '<tr><td>酉</td><td>八月</td><td>金</td><td>鸡</td></tr>'
+        + '<tr><td>子</td><td>冬月</td><td>水</td><td>鼠</td><td rowspan="2">水旺于冬</td></tr>'
+        + '<tr><td>亥</td><td>十月</td><td>水</td><td>猪</td></tr>'
+        + '</table>'
+        + '<p style="font-size:0.82rem;color:var(--ink-light)">要点：月令决定日主是否"得令"。<br>'
+        + '例如：甲木日主生于寅月（正月）= 木旺之月 = 得令（旺）。</p>',
+      hint: "月令是八字中最重要的因素。日主生于对自己有利的月份，就叫得令。"
+    },
+    { // 3 - 五行概览
+      title: "五行概览",
+      text: '<p>五行是五种基本能量状态，与天干、地支、季节都有对应关系：</p>'
+        + '<table class="tut-table" style="margin:12px 0">'
+        + '<tr><th>五行</th><th>季节</th><th>天干</th><th>地支</th><th>特性</th></tr>'
+        + '<tr><td>木</td><td>春</td><td>甲乙</td><td>寅卯</td><td>生长、舒展</td></tr>'
+        + '<tr><td>火</td><td>夏</td><td>丙丁</td><td>巳午</td><td>炎热、上升</td></tr>'
+        + '<tr><td>土</td><td>四季末</td><td>戊己</td><td>辰戌丑未</td><td>承载、转化</td></tr>'
+        + '<tr><td>金</td><td>秋</td><td>庚辛</td><td>申酉</td><td>收敛、肃杀</td></tr>'
+        + '<tr><td>水</td><td>冬</td><td>壬癸</td><td>子亥</td><td>寒冷、润下</td></tr>'
+        + '</table>'
+        + '<p style="margin-top:10px">五行相生（促进）：木生火、火生土、土生金、金生水、水生木</p>'
+        + '<p>五行相克（制约）：木克土、土克水、水克火、火克金、金克木</p>'
+        + '<p style="font-size:0.82rem;color:var(--ink-faint);margin-top:6px">记忆口诀：<br>'
+        + '相生：木火土金水（相邻相生，循环不息）<br>'
+        + '相克：木土水火金（间隔一个相克）</p>',
+      hint: "生克关系是八字判断的核心，需要练到条件反射。建议每天复习一遍。"
+    },
+    { // 4 - 八卦入门（表格）
+      title: "八卦入门",
+      text: '<p>八卦是八种基本象，对应自然、家庭、性格：</p>'
+        + '<table class="tut-table" style="margin:12px 0;font-size:0.82rem">'
+        + '<tr><th>卦名</th><th>符号</th><th>自然</th><th>五行</th><th>方位</th><th>家庭</th></tr>'
+        + '<tr><td>乾</td><td>☰</td><td>天</td><td>金</td><td>西北</td><td>父亲</td></tr>'
+        + '<tr><td>坤</td><td>☷</td><td>地</td><td>土</td><td>西南</td><td>母亲</td></tr>'
+        + '<tr><td>震</td><td>☳</td><td>雷</td><td>木</td><td>东</td><td>长男</td></tr>'
+        + '<tr><td>巽</td><td>☴</td><td>风</td><td>木</td><td>东南</td><td>长女</td></tr>'
+        + '<tr><td>坎</td><td>☵</td><td>水</td><td>水</td><td>北</td><td>中男</td></tr>'
+        + '<tr><td>离</td><td>☲</td><td>火</td><td>火</td><td>南</td><td>中女</td></tr>'
+        + '<tr><td>艮</td><td>☶</td><td>山</td><td>土</td><td>东北</td><td>少男</td></tr>'
+        + '<tr><td>兑</td><td>☱</td><td>泽</td><td>金</td><td>西</td><td>少女</td></tr>'
+        + '</table>'
+        + '<p style="font-size:0.82rem;color:var(--ink-light);margin-top:8px">'
+        + '八卦分先天（宇宙本源）和后天（实际应用）。我们学的是后天八卦。<br>'
+        + '每个卦象都对应自然现象、家庭成员和性格特质。建议结合自己的生活经验来理解。</p>',
+      hint: "八卦是理解周易象数体系的基础，也是后面学习六爻占卜的前提。"
+    },
+    { // 5 - 修行开始
+      title: "修行开始",
+      text: '<p>现在你已经有了基础知识。</p>'
+        + '<p style="margin-top:10px">游戏分为两个阶段：</p>'
+        + '<p style="margin:8px 0;font-weight:bold">第一阶段：八卦五行闯关（打底层逻辑）</p>'
+        + '<p style="font-size:0.85rem;color:var(--ink-light);line-height:1.8">'
+        + '1.阴阳配对 → 2.八卦深造 → 3.五行生克 → 4.铜钱起卦</p>'
+        + '<p style="margin:10px 0;font-weight:bold">第二阶段：四柱八字实战（街头卦师模拟器）</p>'
+        + '<p style="font-size:0.85rem;color:var(--ink-light);line-height:1.8">'
+        + '5.四柱排盘 → 6.日主旺衰 → 7.十神速配 → 8.完整断局</p>'
+        + '<p style="margin-top:10px;font-size:0.85rem;color:var(--ink-light)">'
+        + '每通过一关，获得对应的五行精气。集齐五行精气（各100点），提升修行等级。</p>'
+        + '<p style="margin-top:8px;font-size:0.82rem;color:var(--ink-faint)">'
+        + '建议按顺序通关，每一关都在为后面的内容打基础。如果某关卡住了，可以反复练习。</p>',
+      hint: "准备好了吗？点击开始修行，进入关卡选择！"
+    },
+  ];
+
+  var p = pages[state.tutorialIdx];
+  document.getElementById("tut-title").innerHTML = p.title;
+  document.getElementById("tut-text").innerHTML = p.text;
+  document.getElementById("tut-hint").textContent = p.hint;
+  var btn = document.getElementById("tut-btn");
+  if (state.tutorialIdx >= pages.length - 1) {
+    btn.textContent = "开始修行";
+    btn.onclick = function() {
+      document.getElementById("tutorial-overlay").classList.add("hidden");
+      showChapterSelect();
+    };
+  } else {
+    btn.textContent = "下一页";
+    btn.onclick = function() { state.tutorialIdx++; renderTutorial(); };
+  }
+}
+
+
+// ===== 界面 =====
+function showScreen(id) {
+  var screens = document.querySelectorAll(".screen");
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove("active");
+  document.getElementById(id).classList.add("active");
+}
+function showTitle() { showScreen("title-screen"); }
+function showChapterSelect() {
+  loadState(); updateChapterUI(); showScreen("chapter-screen");
+}
+
+function updateChapterUI() {
+  var grid = document.getElementById("chapter-grid");
+  grid.innerHTML = "";
+  var chaps = [
+    {id:1,name:"阴阳配对",sub:"万物分阴阳",unlocked:true},
+    {id:2,name:"八卦深造",sub:"象义与方位",unlocked:!!state.chapterCompleted[1]},
+    {id:3,name:"五行生克",sub:"相生相克",unlocked:!!state.chapterCompleted[2]},
+    {id:4,name:"铜钱起卦",sub:"三枚铜钱",unlocked:!!state.chapterCompleted[3]},
+    {id:5,name:"四柱排盘",sub:"年日月时",unlocked:!!state.chapterCompleted[4]},
+    {id:6,name:"日主旺衰",sub:"三步称重",unlocked:!!state.chapterCompleted[5]},
+    {id:7,name:"十神速配",sub:"人际密码",unlocked:!!state.chapterCompleted[6]},
+    {id:8,name:"完整断局",sub:"命理简报",unlocked:!!state.chapterCompleted[7]},
+  ];
+  for (var i = 0; i < chaps.length; i++) {
+    var ch = chaps[i];
+    var done = !!state.chapterCompleted[ch.id];
+    var card = document.createElement("div");
+    card.className = "chapter-card" + (ch.unlocked ? "" : " locked");
+    card.innerHTML = '<div class="ch-num">第' + (i+1) + '关</div>'
+      + '<div class="ch-name">' + ch.name + '</div>'
+      + '<div class="ch-sub">' + ch.sub + '</div>'
+      + (ch.unlocked ? (done ? '<div style="color:var(--red);font-size:0.7rem;margin-top:4px">已通关</div>' : '') : '<div class="lock-icon">🔒</div>');
+    if (ch.unlocked) {
+      (function(chId) { card.onclick = function() { startChapter(chId); }; })(ch.id);
+    }
+    grid.appendChild(card);
+  }
+  var total = 0;
+  var keys = ["wood","fire","earth","metal","water"];
+  for (var j = 0; j < keys.length; j++) total += Math.min(state.exp[keys[j]], 100);
+  var pct = Math.min(total / 500 * 100, 100);
+  document.getElementById("exp-fill").style.width = pct + "%";
+  var cn = {"wood":"木","fire":"火","earth":"土","metal":"金","water":"水"};
+  var expStr = "五行精气: ";
+  for (var k = 0; k < keys.length; k++) expStr += cn[keys[k]] + state.exp[keys[k]] + " ";
+  expStr += "| 等级: " + (LEVEL_NAMES[Math.floor(total/100)] || "命理师");
+  document.getElementById("exp-label").textContent = expStr;
+}
+
+function startChapter(id) {
+  state.currentChapter = id;
+  saveState();
+  var names = ["","阴阳配对","八卦深造","五行生克","铜钱起卦","四柱排盘","日主旺衰","十神速配","完整断局"];
+  document.getElementById("gh-title").textContent = "第" + id + "关：" + names[id];
+  updateExpDisplay();
+  showScreen("game-screen");
+  if (id === 1) startMatchGame();
+  else if (id === 2) startBaguaLearn();
+  else if (id === 3) startShengKe();
+  else if (id === 4) startCoinGame();
+  else if (id === 5) startPillarGame();
+  else if (id === 6) startWangShuai();
+  else if (id === 7) startShiShen();
+  else if (id === 8) startFullReading();
+}
+function exitGame() { showChapterSelect(); }
+function updateExpDisplay() {
+  var e = state.exp;
+  document.getElementById("gh-exp").textContent = "木" + e.wood + " 火" + e.fire + " 土" + e.earth + " 金" + e.metal + " 水" + e.water;
+}
+function addExp(type, amount) {
+  state.exp[type] = Math.min((state.exp[type]||0) + amount, 100);
+  var total = 0; var keys = ["wood","fire","earth","metal","water"];
+  for (var i = 0; i < keys.length; i++) total += Math.min(state.exp[keys[i]], 100);
+  state.level = Math.floor(total / 100);
+  saveState();
+}
+function showResult(title, desc, expStr) {
+  showScreen("result-screen");
+  document.getElementById("rs-icon").textContent = "✅";
+  document.getElementById("rs-title").textContent = title;
+  document.getElementById("rs-desc").innerHTML = desc;
+  document.getElementById("rs-exp").textContent = expStr || "";
+  var nb = document.getElementById("rs-next-btn");
+  if (state.currentChapter < 8) {
+    nb.style.display = "inline-block";
+    nb.textContent = "下一关";
+    nb.onclick = function() { startChapter(state.currentChapter + 1); };
+  } else { nb.style.display = "none"; }
+}
+
+// ===== 通用答题函数（答错后显示下一题按钮）=====
+// 返回一个对象，包含显示题目和检查答案的通用逻辑
+function makeQuiz(questions, onComplete) {
+  var idx = 0, correct = 0;
+  function show() {
+    if (idx >= questions.length) { onComplete(correct, questions.length); return; }
+    var q = questions[idx];
+    var body = document.getElementById("game-body");
+    var html = '<div class="test-area">'
+      + '<div class="test-question">【第' + (idx+1) + '/' + questions.length + '题】' + q.q + '</div>'
+      + '<div class="test-options" id="to"></div>'
+      + '<div class="wrong-explain" id="we" style="display:none"></div>'
+      + '<button class="wrong-next-btn" id="wnbtn" style="display:none">下一题 →</button>'
+      + '</div>';
+    body.innerHTML = html;
+    var to = document.getElementById("to");
+    for (var i = 0; i < q.opts.length; i++) {
+      (function(optIdx) {
+        var btn = document.createElement("div");
+        btn.className = "test-opt";
+        btn.textContent = q.opts[optIdx];
+        btn.onclick = function() { check(optIdx); };
+        to.appendChild(btn);
+      })(i);
+    }
+  }
+  function check(optIdx) {
+    var q = questions[idx];
+    var opts = document.getElementById("to").children;
+    for (var i = 0; i < opts.length; i++) opts[i].onclick = null;
+    opts[q.ans].classList.add("correct");
+    var we = document.getElementById("we");
+    if (optIdx === q.ans) {
+      correct++;
+      we.style.display = "block";
+      we.textContent = "✓ 正确！" + (q.exp || "");
+      var btn = document.getElementById("wnbtn");
+      btn.style.display = "block";
+      btn.onclick = function() { idx++; show(); };
+    } else {
+      opts[optIdx].classList.add("wrong");
+      we.style.display = "block";
+      we.textContent = "✗ " + (q.exp || "正确答案：" + q.opts[q.ans]);
+      var btn2 = document.getElementById("wnbtn");
+      btn2.style.display = "block";
+      btn2.onclick = function() { idx++; show(); };
+    }
+  }
+  show();
+}
+
+
+// ===== 第1关 阴阳配对 =====
+function startMatchGame() {
+  var body = document.getElementById("game-body");
+  body.innerHTML = '<div class="tutorial-box" style="max-width:420px;margin:20px auto">'
+    + '<div class="tut-title">第1关：阴阳配对</div>'
+    + '<div class="tut-text">规则：找出同五行、一阴一阳的天干配对。<br><br>'
+    + '例：甲（阳木）+ 乙（阴木）是一组。<br>'
+    + '丙（阳火）+ 丁（阴火）是一组。<br><br>'
+    + '目标：记住十天干的阴阳五行归属。</div>'
+    + '<button class="tut-btn" onclick="startMatchGameActual()">开始配对</button></div>';
+}
+
+function startMatchGameActual() {
+  var body = document.getElementById("game-body");
+  var cards = [];
+  for (var i = 0; i < 5; i++) {
+    cards.push({ id:i*2, gan:TIANGAN[i*2].gan, yin:TIANGAN[i*2].yin, wuxing:TIANGAN[i*2].wuxing, pairId:i });
+    cards.push({ id:i*2+1, gan:TIANGAN[i*2+1].gan, yin:TIANGAN[i*2+1].yin, wuxing:TIANGAN[i*2+1].wuxing, pairId:i });
+  }
+  for (var j = cards.length-1; j > 0; j--) { var r = Math.floor(Math.random()*(j+1)); var t = cards[j]; cards[j] = cards[r]; cards[r] = t; }
+  var flipped = []; var matched = []; var canClick = true;
+  body.innerHTML = '<div class="match-info"><span>配对进度：<strong id="mp">0/5</strong></span><span>翻牌：<strong id="mm">0</strong></span></div>'
+    + '<div class="match-grid" id="mg"></div>';
+  var grid = document.getElementById("mg");
+  for (var k = 0; k < cards.length; k++) {
+    (function(idx) {
+      var c = document.createElement("div");
+      c.className = "match-card"; c.dataset.idx = idx;
+      c.innerHTML = '<div class="card-gan">' + cards[idx].gan + '</div>'
+        + '<div class="card-yin">' + (cards[idx].yin?"阳":"阴") + '</div>'
+        + '<div class="card-wuxing">' + WX_CN[cards[idx].wuxing] + '</div>';
+      c.onclick = function() { flipCard(idx, cards, flipped, matched); };
+      grid.appendChild(c);
+    })(k);
+  }
+}
+
+function flipCard(idx, cards, flipped, matched) {
+  if (!canClick) return;
+  var idxN = Number(idx);
+  for (var f = 0; f < flipped.length; f++) if (flipped[f] === idxN) return;
+  for (var m = 0; m < matched.length; m++) {
+    if (cards[matched[m]] && cards[matched[m]].pairId === cards[idxN].pairId) return;
+  }
+  flipped.push(idxN);
+  var el = document.getElementById("mg").children[idxN];
+  el.classList.add("flipped");
+  if (flipped.length >= 2) {
+    canClick = false;
+    var a = flipped[0], b = flipped[1];
+    if (cards[a].pairId === cards[b].pairId) {
+      matched.push(a); matched.push(b);
+      setTimeout(function() {
+        document.getElementById("mg").children[a].classList.add("matched");
+        document.getElementById("mg").children[b].classList.add("matched");
+        flipped.length = 0;
+        document.getElementById("mp").textContent = (matched.length/2) + "/5";
+        document.getElementById("mm").textContent = parseInt(document.getElementById("mm").textContent) + 1;
+        if (matched.length >= 10) setTimeout(function() { completeCh1(); }, 800);
+        else canClick = true;
+      }, 500);
+    } else {
+      setTimeout(function() {
+        document.getElementById("mg").children[a].classList.remove("flipped");
+        document.getElementById("mg").children[b].classList.remove("flipped");
+        flipped.length = 0;
+        document.getElementById("mm").textContent = parseInt(document.getElementById("mm").textContent) + 1;
+        canClick = true;
+      }, 1000);
+    }
+  }
+}
+
+function completeCh1() {
+  addExp("wood", 20); state.chapterCompleted[1] = true; saveState();
+  showResult("配对成功！", "你已掌握天干的阴阳五行归属。<br><br>阳干主动刚健，阴干主静柔顺。", "+20 木气");
+}
+
+// ===== 第2关 八卦深造 =====
+var baguaLearned = 0;
+function startBaguaLearn() {
+  baguaLearned = 0;
+  var body = document.getElementById("game-body");
+  var html = '<div class="tutorial-box" style="max-width:440px;margin:20px auto">'
+    + '<div class="tut-title">第2关：八卦深造</div>'
+    + '<div class="tut-text">八卦是八种基本象。<br>点击每张八卦卡来学习，学完8张后开始答题。</div>'
+    + '<div class="bagua-learn-grid" id="blg"></div>'
+    + '<div class="learn-progress" id="lp">已学 0/8</div>'
+    + '<button class="tut-btn" id="bagua-quiz-btn" style="display:none" onclick="startBaguaQuiz()">开始答题</button></div>';
+  body.innerHTML = html;
+  var grid = document.getElementById("blg");
+  for (var i = 0; i < BAGUA.length; i++) {
+    (function(idx) {
+      var card = document.createElement("div");
+      card.className = "bagua-learn-card";
+      card.innerHTML = '<div class="bl-symbol">' + BAGUA[idx].symbol + '</div>'
+        + '<div class="bl-name">' + BAGUA[idx].name + '</div>'
+        + '<div class="bl-wuxing">' + WX_CN[BAGUA[idx].wuxing] + '</div>'
+        + '<div class="bl-dir">' + BAGUA[idx].dir + '</div>';
+      card.onclick = function() { learnBagua(idx, this); };
+      grid.appendChild(card);
+    })(i);
+  }
+}
+
+function learnBagua(idx, el) {
+  if (el.classList.contains("learned")) return;
+  el.classList.add("learned");
+  baguaLearned++;
+  document.getElementById("lp").textContent = "已学 " + baguaLearned + "/8";
+  if (baguaLearned >= 8) document.getElementById("bagua-quiz-btn").style.display = "block";
+}
+
+var baguaQuizIdx = 0;
+var baguaQuizCorrect = 0;
+var baguaQuestions = [
+  { q:"乾卦对应的自然象是什么？", opts:["天","地","雷","风"], ans:0, exp:"乾为天，代表刚健、领导力、父亲。" },
+  { q:"坤卦对应的自然象是什么？", opts:["天","地","雷","山"], ans:1, exp:"坤为地，代表包容、稳定、母亲。" },
+  { q:"震卦对应什么自然象？", opts:["风","雷","水","火"], ans:1, exp:"震为雷，位于东方，代表开拓、冲动、长男。" },
+  { q:"巽卦对应什么？", opts:["风","雷","泽","山"], ans:0, exp:"巽为风，位于东南，代表细腻、谋划、长女。" },
+  { q:"坎卦对应什么自然象？", opts:["火","水","泽","山"], ans:1, exp:"坎为水，位于北方，代表智慧、财运、中男。" },
+  { q:"离卦对应什么？", opts:["火","水","泽","雷"], ans:0, exp:"离为火，位于南方，代表口才、名气、中女。" },
+  { q:"艮卦对应什么自然象？", opts:["山","泽","风","雷"], ans:0, exp:"艮为山，位于东北，代表保守、积蓄、少男。" },
+  { q:"兑卦对应什么？", opts:["泽","山","风","雷"], ans:0, exp:"兑为泽，位于西方，代表社交、才华、少女。" },
+  { q:"乾卦属什么五行？", opts:["金","木","水","火"], ans:0, exp:"乾为金，对应秋季、收敛、决断。" },
+  { q:"哪个卦位于南方？", opts:["坎","离","震","坤"], ans:1, exp:"离卦位于南方，五行属火。" },
+];
+
+function startBaguaQuiz() {
+  baguaQuizIdx = 0; baguaQuizCorrect = 0;
+  showBaguaQuestion();
+}
+
+function showBaguaQuestion() {
+  if (baguaQuizIdx >= baguaQuestions.length) { completeCh2(); return; }
+  var q = baguaQuestions[baguaQuizIdx];
+  var body = document.getElementById("game-body");
+  var html = '<div class="test-area">'
+    + '<div class="test-question">【第' + (baguaQuizIdx+1) + '/' + baguaQuestions.length + '题】' + q.q + '</div>'
+    + '<div class="test-options" id="to"></div>'
+    + '<div class="wrong-explain" id="we" style="display:none"></div>'
+    + '<button class="wrong-next-btn" id="wnbtn" style="display:none">下一题 →</button></div>';
+  body.innerHTML = html;
+  var to = document.getElementById("to");
+  for (var i = 0; i < q.opts.length; i++) {
+    (function(optIdx) {
+      var btn = document.createElement("div");
+      btn.className = "test-opt";
+      btn.textContent = q.opts[optIdx];
+      btn.onclick = function() { checkBaguaAnswer(optIdx); };
+      to.appendChild(btn);
+    })(i);
+  }
+}
+
+function checkBaguaAnswer(optIdx) {
+  var q = baguaQuestions[baguaQuizIdx];
+  var opts = document.getElementById("to").children;
+  for (var i = 0; i < opts.length; i++) opts[i].onclick = null;
+  opts[q.ans].classList.add("correct");
+  var we = document.getElementById("we");
+  if (optIdx === q.ans) {
+    baguaQuizCorrect++;
+    we.style.display = "block";
+    we.textContent = "✓ 正确！" + q.exp;
+    var btn = document.getElementById("wnbtn");
+    btn.style.display = "block";
+    var cur = baguaQuizIdx;
+    btn.onclick = function() { baguaQuizIdx = cur + 1; showBaguaQuestion(); };
+  } else {
+    opts[optIdx].classList.add("wrong");
+    we.style.display = "block";
+    we.textContent = "✗ 答错原因：" + q.exp;
+    var btn2 = document.getElementById("wnbtn");
+    btn2.style.display = "block";
+    var cur2 = baguaQuizIdx;
+    btn2.onclick = function() { baguaQuizIdx = cur2 + 1; showBaguaQuestion(); };
+  }
+}
+
+function completeCh2() {
+  addExp("fire", 20); state.chapterCompleted[2] = true; saveState();
+  showResult("八卦已成！", "你已掌握八卦的基本象义、方位和五行归属。<br><br>八卦是理解周易象数体系的基础。", "+20 火气");
+}
+
+// ===== 第3关 五行生克 =====
+var skQuestions = [
+  { q:"木生什么？", opts:["火","土","金","水"], ans:0, exp:"木生火，因为木可以燃烧生火。" },
+  { q:"火生什么？", opts:["木","土","金","水"], ans:1, exp:"火生土，因为火燃烧后成灰（土）。" },
+  { q:"土生什么？", opts:["木","火","金","水"], ans:2, exp:"土生金，因为矿物金属产于土中。" },
+  { q:"金生什么？", opts:["木","火","土","水"], ans:3, exp:"金生水，因为金属熔化变液体（水象）。" },
+  { q:"水生什么？", opts:["木","火","土","金"], ans:0, exp:"水生木，因为水滋润树木生长。" },
+  { q:"木克什么？", opts:["火","土","金","水"], ans:1, exp:"木克土，因为树根破土而出。" },
+  { q:"火克什么？", opts:["木","土","金","水"], ans:3, exp:"火克金，因为烈火熔化金属。" },
+  { q:"土克什么？", opts:["木","火","金","水"], ans:3, exp:"土克水，因为土堤可以挡水。" },
+  { q:"金克什么？", opts:["木","火","土","水"], ans:0, exp:"金克木，因为金属斧头可以砍树。" },
+  { q:"水克什么？", opts:["木","火","土","金"], ans:1, exp:"水克火，因为水可以灭火。" },
+];
+
+function startShengKe() {
+  makeQuiz(skQuestions, function(correct, total) {
+    addExp("earth", 20); state.chapterCompleted[3] = true; saveState();
+    showResult("五行已通！", "你已掌握五行相生相克的关系。<br><br>这是八字分析的基础工具。", "+20 土气");
+  });
+}
+
+// ===== 第4关 铜钱起卦 =====
+var coinResults = [];
+function startCoinGame() {
+  coinResults = [];
+  var body = document.getElementById("game-body");
+  body.innerHTML = '<div class="tutorial-box" style="max-width:400px;margin:20px auto">'
+    + '<div class="tut-title">第4关：铜钱起卦</div>'
+    + '<div class="tut-text">三枚铜钱，抛掷六次，记录正反面，得到六爻，组成一卦。<br><br>'
+    + '正面（字）= 阳 = 一横<br>'
+    + '反面（花）= 阴 = 断横<br><br>'
+    + '点击铜钱抛掷，共六次。</div>'
+    + '<button class="tut-btn" onclick="startCoinFlip()">开始起卦</button></div>';
+}
+
+function startCoinFlip() {
+  coinResults = [];
+  showCoinFlipper();
+}
+
+function showCoinFlipper() {
+  var body = document.getElementById("game-body");
+  var lines = "";
+  for (var i = 0; i < coinResults.length; i++) {
+    lines += '<div class="gua-line"><span>' + (6-i) + '爻</span><div class="gua-yao">';
+    if (coinResults[i]) {
+      lines += '<div class="yao-yang"></div>';
+    } else {
+      lines += '<div class="yao-yin"><span></span><span></span></div>';
+    }
+    lines += '</div></div>';
+  }
+  var html = '<div class="coin-area"><div class="coin" id="coin" onclick="flipCoin()">'
+    + '<span id="coin-face">？</span></div></div>'
+    + '<div class="coin-result" id="coin-msg">点击铜钱抛掷（第' + (coinResults.length+1) + '/6次）</div>'
+    + '<div id="coin-lines">' + lines + '</div>';
+  if (coinResults.length >= 6) html += '<button class="tut-btn" onclick="showCoinResult()">查看卦象</button>';
+  body.innerHTML = html;
+}
+
+function flipCoin() {
+  if (coinResults.length >= 6) return;
+  var el = document.getElementById("coin");
+  el.classList.add("flipping");
+  setTimeout(function() {
+    var r = Math.random();
+    var isYang = r < 0.5;
+    coinResults.push(isYang);
+    document.getElementById("coin-face").textContent = isYang ? "字" : "花";
+    document.getElementById("coin-msg").textContent = isYang ? "阳爻（一横）" : "阴爻（断横）";
+    el.classList.remove("flipping");
+    setTimeout(function() { showCoinFlipper(); }, 500);
+  }, 600);
+}
+
+function showCoinResult() {
+  var body = document.getElementById("game-body");
+  var html = '<div class="gua-display"><div class="gua-name">本次起卦结果</div>';
+  for (var i = coinResults.length-1; i >= 0; i--) {
+    html += '<div class="gua-line">';
+    if (coinResults[i]) {
+      html += '<div class="gua-yao"><div class="yao-yang"></div></div>';
+    } else {
+      html += '<div class="gua-yao"><div class="yao-yin"><span></span><span></span></div></div>';
+    }
+    html += '</div>';
+  }
+  html += '<div class="gua-desc">上爻到初爻已排好。<br>比较两个纯爻是否相同，可对应到八卦之一。</div></div>';
+  html += '<button class="tut-btn" onclick="completeCh4()">完成</button>';
+  body.innerHTML = html;
+}
+
+function completeCh4() {
+  addExp("metal", 20); state.chapterCompleted[4] = true; saveState();
+  showResult("起卦入门！", "你已掌握铜钱起卦的基本方法。<br><br>六爻成卦是周易占卜的基础步骤。", "+20 金气");
+}
+
+// ===== 第5关 四柱排盘（重做：真正的题目）=====
+// 题目类型：
+// A. 给出四柱，问日主是什么（不标"日主"）
+// B. 给出地支，问五行归属
+// C. 给出月柱地支，问月令五行（用于判断得令）
+
+var pillarQuizIdx = 0;
+var pillarQuizCorrect = 0;
+
+// 随机生成一个四柱
+function randPillar() {
+  var yg = TIANGAN[Math.floor(Math.random()*10)];
+  var yz = DIZHI[Math.floor(Math.random()*12)];
+  var mg = TIANGAN[Math.floor(Math.random()*10)];
+  var mz = DIZHI[Math.floor(Math.random()*12)];
+  var dg = TIANGAN[Math.floor(Math.random()*10)];
+  var dz = DIZHI[Math.floor(Math.random()*12)];
+  var hg = TIANGAN[Math.floor(Math.random()*10)];
+  var hz = DIZHI[Math.floor(Math.random()*12)];
+  return { year: yg.gan+yz.zhi, month: mg.gan+mz.zhi, day: dg.gan+dz.zhi, hour: hg.gan+hz.zhi, dm: dg.gan };
+}
+
+// 生成题目
+function genPillarQuestions() {
+  var qs = [];
+  // 题型A：看四柱，回答日主（日主不直接标出）
+  for (var i = 0; i < 4; i++) {
+    var p = randPillar();
+    qs.push({
+      type: "a",
+      q: "下列四柱的日主（命主）是哪一个天干？",
+      pillars: { year: p.year, month: p.month, day: p.day, hour: p.hour },
+      opts: ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"],
+      ans: p.dm,
+      exp: "日主 = 日柱的天干。日柱是第三柱「" + p.day + "」，天干是「" + p.dm + "」，所以日主是" + p.dm + "。"
+    });
+  }
+  // 题型B：地支→五行
+  var dzExercises = [
+    { q:"地支「寅」属什么五行？", ans:"木", exp:"寅属木，对应正月（春季），木旺于春。" },
+    { q:"地支「卯」属什么五行？", ans:"木", exp:"卯属木，对应二月（春季），木旺于春。" },
+    { q:"地支「巳」属什么五行？", ans:"火", exp:"巳属火，对应四月（夏季），火旺于夏。" },
+    { q:"地支「午」属什么五行？", ans:"火", exp:"午属火，对应五月（夏季），火旺于夏。" },
+    { q:"地支「申」属什么五行？", ans:"金", exp:"申属金，对应七月（秋季），金旺于秋。" },
+    { q:"地支「酉」属什么五行？", ans:"金", exp:"酉属金，对应八月（秋季），金旺于秋。" },
+    { q:"地支「子」属什么五行？", ans:"水", exp:"子属水，对应冬月（冬季），水旺于冬。" },
+    { q:"地支「亥」属什么五行？", ans:"水", exp:"亥属水，对应十月（冬季），水旺于冬。" },
+    { q:"地支「辰」属什么五行？", ans:"土", exp:"辰属土，对应三月（四季末），土旺于四季末。" },
+    { q:"地支「戌」属什么五行？", ans:"土", exp:"戌属土，对应九月（四季末），土旺于四季末。" },
+  ];
+  // 选4题
+  var used = {};
+  var count = 0;
+  while (count < 4) {
+    var ri = Math.floor(Math.random() * dzExercises.length);
+    if (used[ri]) continue;
+    used[ri] = true;
+    count++;
+    var ex = dzExercises[ri];
+    qs.push({ type:"b", q: ex.q, opts: ["木","火","土","金","水"], ans: ex.ans, exp: ex.exp });
+  }
+  // 题型C：月令五行（为第6关打基础）
+  var monthExercises = [
+    { q:"生于寅月（正月），月令五行是什么？", ans:"木", exp:"寅月=正月=春季，木旺于春，所以月令五行是木。" },
+    { q:"生于卯月（二月），月令五行是什么？", ans:"木", exp:"卯月=二月=春季，木旺于春，所以月令五行是木。" },
+    { q:"生于巳月（四月），月令五行是什么？", ans:"火", exp:"巳月=四月=夏季，火旺于夏，所以月令五行是火。" },
+    { q:"生于午月（五月），月令五行是什么？", ans:"火", exp:"午月=五月=夏季，火旺于夏，所以月令五行是火。" },
+    { q:"生于申月（七月），月令五行是什么？", ans:"金", exp:"申月=七月=秋季，金旺于秋，所以月令五行是金。" },
+    { q:"生于子月（冬月），月令五行是什么？", ans:"水", exp:"子月=冬月=冬季，水旺于冬，所以月令五行是水。" },
+  ];
+  var used2 = {};
+  var count2 = 0;
+  while (count2 < 3) {
+    var ri2 = Math.floor(Math.random() * monthExercises.length);
+    if (used2[ri2]) continue;
+    used2[ri2] = true;
+    count2++;
+    var ex2 = monthExercises[ri2];
+    qs.push({ type:"c", q: ex2.q, opts: ["木","火","土","金","水"], ans: ex2.ans, exp: ex2.exp });
+  }
+  // 打乱顺序
+  for (var j = qs.length-1; j > 0; j--) {
+    var r = Math.floor(Math.random()*(j+1));
+    var t = qs[j]; qs[j] = qs[r]; qs[r] = t;
+  }
+  return qs;
+}
+
+var pillarQuestions = [];
+
+function startPillarGame() {
+  pillarQuizIdx = 0; pillarQuizCorrect = 0;
+  pillarQuestions = genPillarQuestions();
+  showPillarQ();
+}
+
+function showPillarQ() {
+  if (pillarQuizIdx >= pillarQuestions.length) { completeCh5(); return; }
+  var q = pillarQuestions[pillarQuizIdx];
+  var body = document.getElementById("game-body");
+  var html = '<div class="tutorial-box" style="max-width:440px;margin:20px auto">'
+    + '<div class="tut-title">第5关：四柱排盘</div>';
+  if (q.type === "a") {
+    html += '<div class="tut-text">排好四柱后，<strong>日柱的天干</strong>就是日主（命主）。<br>四柱顺序：年柱 | 月柱 | <strong>日柱</strong> | 时柱</div>'
+      + '<div class="pillar-display">'
+      + '<div class="pillar-slot"><div class="ps-label">年柱</div><div class="ps-gan">' + q.pillars.year[0] + '</div><div class="ps-zhi">' + q.pillars.year[1] + '</div></div>'
+      + '<div class="pillar-slot"><div class="ps-label">月柱</div><div class="ps-gan">' + q.pillars.month[0] + '</div><div class="ps-zhi">' + q.pillars.month[1] + '</div></div>'
+      + '<div class="pillar-slot"><div class="ps-label">日柱</div><div class="ps-gan">' + q.pillars.day[0] + '</div><div class="ps-zhi">' + q.pillars.day[1] + '</div></div>'
+      + '<div class="pillar-slot"><div class="ps-label">时柱</div><div class="ps-gan">' + q.pillars.hour[0] + '</div><div class="ps-zhi">' + q.pillars.hour[1] + '</div></div>'
+      + '</div>';
+  } else {
+    html += '<div class="tut-text">' + q.q + '</div>';
+  }
+  html += '<div class="quiz-opts" id="pqo"></div>'
+    + '<div class="quiz-explain" id="pqe" style="display:none"></div>'
+    + '<button class="wrong-next-btn" id="pqbtn" style="display:none">下一题 →</button></div>';
+  body.innerHTML = html;
+  var cont = document.getElementById("pqo");
+  for (var i = 0; i < q.opts.length; i++) {
+    (function(oi) {
+      var b = document.createElement("div");
+      b.className = "quiz-opt"; b.textContent = q.opts[oi];
+      b.onclick = function() { checkPillarAnswer(q.opts[oi]); };
+      cont.appendChild(b);
+    })(i);
+  }
+}
+
+function checkPillarAnswer(ans) {
+  var q = pillarQuestions[pillarQuizIdx];
+  var opts = document.getElementById("pqo").children;
+  for (var i = 0; i < opts.length; i++) opts[i].onclick = null;
+  var correctAns = q.ans;
+  // 找到正确答案的按钮并标绿
+  for (var j = 0; j < opts.length; j++) {
+    if (opts[j].textContent === correctAns) { opts[j].classList.add("correct"); break; }
+  }
+  var we = document.getElementById("pqe");
+  if (ans === correctAns) {
+    pillarQuizCorrect++;
+    we.style.display = "block";
+    we.textContent = "✓ 正确！" + q.exp;
+  } else {
+    for (var k = 0; k < opts.length; k++) {
+      if (opts[k].textContent === ans) { opts[k].classList.add("wrong"); break; }
+    }
+    we.style.display = "block";
+    we.textContent = "✗ " + q.exp;
+  }
+  var btn = document.getElementById("pqbtn");
+  btn.style.display = "block";
+  var cur = pillarQuizIdx;
+  btn.onclick = function() { pillarQuizIdx = cur + 1; showPillarQ(); };
+}
+
+function completeCh5() {
+  addExp("water", 20); state.chapterCompleted[5] = true; saveState();
+  showResult("四柱已排！", "你已掌握四柱排盘方法，能准确找出日主。<br><br>日主是八字分析的核心，所有十神关系都围绕日主展开。", "+20 水气");
+}
+
+// ===== 第6关 日主旺衰（修正教程+题目）=====
+var wangQuestions = [
+  { q:"甲木日主，生于寅月。得令吗？", opts:["得令（旺）","不得令（衰）"], ans:0,
+    exp:"甲属木，寅属木（正月/春季）。木旺于春季，甲木生于木旺之月 = 得令而旺。" },
+  { q:"丙火日主，生于午月。得令吗？", opts:["得令（旺）","不得令（衰）"], ans:0,
+    exp:"丙属火，午属火（五月/夏季）。火旺于夏季，丙火生于火旺之月 = 得令而旺。" },
+  { q:"壬水日主，生于子月。得令吗？", opts:["得令（旺）","不得令（衰）"], ans:0,
+    exp:"壬属水，子属水（冬月/冬季）。水旺于冬季，壬水生于水旺之月 = 得令而旺。" },
+  { q:"庚金日主，生于卯月。得令吗？", opts:["得令（旺）","不得令（衰）"], ans:1,
+    exp:"庚属金，卯属木（二月/春季）。金旺于秋季，卯月是木旺之月，金在木旺之月失令而衰。" },
+  { q:"戊土日主，地支见戌。得地吗？", opts:["得地","不得地"], ans:0,
+    exp:"戊属土，戌属土。地支有同类（同五行）= 得地。土旺于辰戌丑未月。" },
+  { q:"乙木日主，地支见亥。得地吗？", opts:["得地","不得地"], ans:0,
+    exp:"乙属木，亥属水。水是生木的（印星生我），地支有印星生我者也算有根、得地。" },
+  { q:"庚金日主，天干见辛。得势吗？", opts:["得势","不得势"], ans:0,
+    exp:"庚属金（阳金），辛也属金（阴金）。天干有同类帮身 = 得势。" },
+  { q:"丁火日主，天干见丙。得势吗？", opts:["得势","不得势"], ans:0,
+    exp:"丁属火（阴火），丙也属火（阳火）。天干有同类 = 得势。丙丁皆火，互帮。" },
+  { q:"己土日主，生于未月。得令吗？", opts:["得令（旺）","不得令（衰）"], ans:0,
+    exp:"己属土，未属土（六月/四季末）。土旺于辰戌丑未月，己土生于土旺之月 = 得令而旺。" },
+  { q:"辛金日主，地支见申。得地吗？", opts:["得地","不得地"], ans:0,
+    exp:"辛属金，申属金。地支有同类根 = 得地。金旺于申酉月（秋季）。" },
+];
+
+function startWangShuai() {
+  wangQuizIdx = 0; wangCorrect = 0;
+  var body = document.getElementById("game-body");
+  body.innerHTML = '<div class="tutorial-box" style="max-width:460px;margin:20px auto">'
+    + '<div class="tut-title">第6关：日主旺衰</div>'
+    + '<div class="tut-text">'
+    + '<p><strong>日主旺衰判断三步法：</strong></p>'
+    + '<p style="margin-top:8px"><strong>第一步：得令（看月令）</strong><br>'
+    + '月令五行与日主同，或月令五行生日主 = 得令（旺）。<br>'
+    + '例：甲（木）生于寅月（木）→ 木旺于春，得令。</p>'
+    + '<p style="margin-top:8px"><strong>第二步：得地（看地支根）</strong><br>'
+    + '日主在地支有同类（同五行）或印星（生我者）= 得地。<br>'
+    + '例：甲（木）地支见寅或卯（同类根）→ 得地。<br>'
+    + '例：甲（木）地支见子或亥（水生木=印星）→ 也得地。</p>'
+    + '<p style="margin-top:8px"><strong>第三步：得势（看天干帮）</strong><br>'
+    + '日主在天干有比肩或劫财（同五行）= 得势。<br>'
+    + '例：甲（阳木）天干见甲（比肩）或乙（劫财）→ 得势。</p>'
+    + '<p style="margin-top:8px">三者皆备 = 日主强旺；三者皆无 = 日主衰弱。</p>'
+    + '</div>'
+    + '<div class="tut-hint">记忆口诀：得令看月令旺衰，得地看根，得势看帮。<br>'
+    + '强旺喜克泄，衰弱喜生扶。<br><br>'
+    + '参考：寅卯=木旺春，巳午=火旺夏，申酉=金旺秋，子亥=水旺冬，辰戌丑未=土旺四季末。</div>'
+    + '<button class="tut-btn" onclick="startWangQuiz()">开始答题</button></div>';
+}
+
+var wangQuizIdx = 0;
+var wangCorrect = 0;
+
+function startWangQuiz() { wangQuizIdx = 0; wangCorrect = 0; showWangQ(); }
+
+function showWangQ() {
+  if (wangQuizIdx >= wangQuestions.length) { completeCh6(); return; }
+  var q = wangQuestions[wangQuizIdx];
+  var body = document.getElementById("game-body");
+  var html = '<div class="test-area">'
+    + '<div class="test-question">【第' + (wangQuizIdx+1) + '/' + wangQuestions.length + '题】' + q.q + '</div>'
+    + '<div class="test-options" id="wto"></div>'
+    + '<div class="wrong-explain" id="wex" style="display:none"></div>'
+    + '<button class="wrong-next-btn" id="wnbtn" style="display:none">下一题 →</button></div>';
+  body.innerHTML = html;
+  var cont = document.getElementById("wto");
+  for (var i = 0; i < q.opts.length; i++) {
+    (function(oi) {
+      var b = document.createElement("div");
+      b.className = "test-opt"; b.textContent = q.opts[oi];
+      b.onclick = function() { checkWangA(oi); };
+      cont.appendChild(b);
+    })(i);
+  }
+}
+
+function checkWangA(oi) {
+  var q = wangQuestions[wangQuizIdx];
+  var opts = document.getElementById("wto").children;
+  for (var i = 0; i < opts.length; i++) opts[i].onclick = null;
+  opts[q.ans].classList.add("correct");
+  var we = document.getElementById("wex");
+  if (oi === q.ans) {
+    wangCorrect++;
+    we.style.display = "block";
+    we.textContent = "✓ 正确！" + q.exp;
+    var btn = document.getElementById("wnbtn");
+    btn.style.display = "block";
+    var cur = wangQuizIdx;
+    btn.onclick = function() { wangQuizIdx = cur + 1; showWangQ(); };
+  } else {
+    opts[oi].classList.add("wrong");
+    we.style.display = "block";
+    we.textContent = "✗ " + q.exp;
+    var btn2 = document.getElementById("wnbtn");
+    btn2.style.display = "block";
+    var cur2 = wangQuizIdx;
+    btn2.onclick = function() { wangQuizIdx = cur2 + 1; showWangQ(); };
+  }
+}
+
+function completeCh6() {
+  addExp("wood", 20); state.chapterCompleted[6] = true; saveState();
+  showResult("旺衰已判！", "你已掌握日主旺衰的三步判断法。<br><br>得令、得地、得势是分析八字强弱的核心方法。", "+20 木气");
+}
+
+// ===== 第7关 十神速配（修正）=====
+function getShiShen(dm, other) {
+  var dmObj = TIANGAN.find(function(t){ return t.gan === dm; });
+  var otObj = TIANGAN.find(function(t){ return t.gan === other; });
+  if (!dmObj || !otObj) return "未知";
+  var dmIdx = TIANGAN.indexOf(dmObj);
+  var otIdx = TIANGAN.indexOf(otObj);
+  var diff = (otIdx - dmIdx + 10) % 10;
+  var names = {0:"比肩",1:"劫财",2:"食神",3:"伤官",4:"偏财",5:"正财",6:"七杀",7:"正官",8:"偏印",9:"正印"};
+  return names[diff] || "未知";
+}
+
+function startShiShen() {
+  shiShenQIdx = 0; shiShenCorrect = 0;
+  var body = document.getElementById("game-body");
+  body.innerHTML = '<div class="tutorial-box" style="max-width:480px;margin:20px auto">'
+    + '<div class="tut-title">第7关：十神速配</div>'
+    + '<div class="tut-text" style="font-size:0.85rem;line-height:1.9">'
+    + '<p><strong>十神</strong>是日主与其他天干的十种关系，由「日主」出发看对方：</p>'
+    + '<table class="tut-table" style="margin:10px 0;font-size:0.82rem">'
+    + '<tr><th>序号差</th><th>关系</th><th>名称</th><th>含义</th></tr>'
+    + '<tr><td>差0</td><td>同我同类</td><td>比肩</td><td>同辈、自信</td></tr>'
+    + '<tr><td>差1</td><td>同我异类</td><td>劫财</td><td>竞争、行动</td></tr>'
+    + '<tr><td>差2</td><td>我生同类</td><td>食神</td><td>温和才华</td></tr>'
+    + '<tr><td>差3</td><td>我生异类</td><td>伤官</td><td>创新才华</td></tr>'
+    + '<tr><td>差4</td><td>我克异类</td><td>偏财</td><td>意外收入</td></tr>'
+    + '<tr><td>差5</td><td>我克同类</td><td>正财</td><td>稳定收入</td></tr>'
+    + '<tr><td>差6</td><td>克我异类</td><td>七杀</td><td>压力挑战</td></tr>'
+    + '<tr><td>差7</td><td>克我同类</td><td>正官</td><td>正统事业</td></tr>'
+    + '<tr><td>差8</td><td>生我异类</td><td>偏印</td><td>特殊才华</td></tr>'
+    + '<tr><td>差9</td><td>生我同类</td><td>正印</td><td>正统学识</td></tr>'
+    + '</table>'
+    + '<p style="margin-top:8px"><strong>计算步骤：</strong></p>'
+    + '<p>① 找到日主天干在十天干中的序号（甲=1，乙=2，...，癸=10）<br>'
+    + '② 找到对方天干的序号<br>'
+    + '③ 计算（对方序号 - 日主序号 + 10)% 10<br>'
+    + '④ 按上表查对应关系</p>'
+    + '<p style="margin-top:6px;color:var(--ink-faint);font-size:0.82rem">'
+    + '例题：日主甲（序号1），问与己（序号6）的关系？<br>'
+    + '差 = (6-1+10)%10 = 5 → 查表：差5 = 正财（我克同类）。'
+    + '</p></div>'
+    + '<button class="tut-btn" onclick="startShiShenQuiz()">开始答题</button></div>';
+}
+
+var shiShenQIdx = 0;
+var shiShenCorrect = 0;
+var shiShenQs = [
+  { q:"日主甲，与乙的关系？", dm:"甲", other:"乙", ans:"劫财",
+    exp:"甲乙同为木，甲阳乙阴 = 同我异类 = 劫财（序号差1）。代表竞争、行动力。" },
+  { q:"日主甲，与丙的关系？", dm:"甲", other:"丙", ans:"食神",
+    exp:"甲（木）生丙（火），甲阳丙阳 = 我生同类 = 食神（序号差2）。代表温和才华。" },
+  { q:"日主甲，与丁的关系？", dm:"甲", other:"丁", ans:"伤官",
+    exp:"甲（木）生丁（火），甲阳丁阴 = 我生异类 = 伤官（序号差3）。代表创新才华但易叛逆。" },
+  { q:"日主甲，与戊的关系？", dm:"甲", other:"戊", ans:"偏财",
+    exp:"甲（木）克戊（土），甲阳戊阳 = 我克异类 = 偏财（序号差4）。代表意外收入、父亲。" },
+  { q:"日主甲，与己的关系？", dm:"甲", other:"己", ans:"正财",
+    exp:"甲（木）克己（土），甲阳己阴 = 我克同类 = 正财（序号差5）。代表稳定收入、妻子。" },
+  { q:"日主甲，与庚的关系？", dm:"甲", other:"庚", ans:"七杀",
+    exp:"庚（金）克甲（木），庚阳甲阳 = 克我异类 = 七杀（序号差6）。代表压力、挑战、权威。" },
+  { q:"日主甲，与辛的关系？", dm:"甲", other:"辛", ans:"正官",
+    exp:"辛（阴金）克甲（阳木），辛阴克甲阳 = 克我同类 = 正官（序号差7）。代表正统事业、约束。" },
+  { q:"日主甲，与壬的关系？", dm:"甲", other:"壬", ans:"偏印",
+    exp:"壬（阳水）生甲（阳木），壬阳生甲阳 = 生我异类 = 偏印（序号差8）。代表特殊才华、直觉。" },
+  { q:"日主甲，与癸的关系？", dm:"甲", other:"癸", ans:"正印",
+    exp:"癸（阴水）生甲（阳木），癸阴生甲阳 = 生我同类 = 正印（序号差9）。代表正统学识、母亲。" },
+  { q:"日主丙，与己的关系？", dm:"丙", other:"己", ans:"正财",
+    exp:"丙（阳火）克己（阴土），丙阳己阴 = 我克同类 = 正财（序号差5）。注意：火克土。" },
+];
+
+function startShiShenQuiz() { shiShenQIdx = 0; shiShenCorrect = 0; showShiShenQ(); }
+
+function showShiShenQ() {
+  if (shiShenQIdx >= shiShenQs.length) { completeCh7(); return; }
+  var q = shiShenQs[shiShenQIdx];
+  var body = document.getElementById("game-body");
+  var html = '<div class="quiz-area"><div class="quiz-q">【第' + (shiShenQIdx+1) + '/' + shiShenQs.length + '题】' + q.q + '</div>'
+    + '<div class="quiz-opts" id="sso"></div>'
+    + '<div class="quiz-explain" id="sse" style="display:none"></div>'
+    + '<button class="wrong-next-btn" id="ssbtn" style="display:none">下一题 →</button></div>';
+  body.innerHTML = html;
+  var opts = ["比肩","劫财","食神","伤官","偏财","正财","七杀","正官","偏印","正印"];
+  var cont = document.getElementById("sso");
+  for (var i = 0; i < opts.length; i++) {
+    (function(oi) {
+      var b = document.createElement("div");
+      b.className = "quiz-opt"; b.textContent = opts[oi];
+      b.onclick = function() { checkShiShenA(opts[oi]); };
+      cont.appendChild(b);
+    })(i);
+  }
+}
+
+function checkShiShenA(ans) {
+  var q = shiShenQs[shiShenQIdx];
+  var opts = document.getElementById("sso").children;
+  for (var i = 0; i < opts.length; i++) opts[i].onclick = null;
+  var correct = getShiShen(q.dm, q.other);
+  for (var j = 0; j < opts.length; j++) {
+    if (opts[j].textContent === correct) { opts[j].classList.add("correct"); break; }
+  }
+  var se = document.getElementById("sse");
+  if (ans === correct) {
+    shiShenCorrect++;
+    se.style.display = "block";
+    se.textContent = "✓ 正确！" + q.exp;
+  } else {
+    for (var k = 0; k < opts.length; k++) {
+      if (opts[k].textContent === ans) { opts[k].classList.add("wrong"); break; }
+    }
+    se.style.display = "block";
+    se.textContent = "✗ " + q.exp;
+  }
+  var btn = document.getElementById("ssbtn");
+  btn.style.display = "block";
+  var cur = shiShenQIdx;
+  btn.onclick = function() { shiShenQIdx = cur + 1; showShiShenQ(); };
+}
+
+function completeCh7() {
+  addExp("fire", 20); state.chapterCompleted[7] = true; saveState();
+  showResult("十神已通！", "你已掌握十神速配方法。<br><br>十神是分析人际关系和性格的核心工具。", "+20 火气");
+}
+
+// ===== 第8关 完整断局 =====
+var DAY_MASTER_DESC = {
+  "甲":"甲木日主：如参天大树，正直有担当，适合领导岗位。需注意过于刚直易折。",
+  "乙":"乙木日主：如藤蔓花草，柔韧善变通，适合创意、协调工作。",
+  "丙":"丙火日主：如正午太阳，热情开朗，适合公众人物、教育行业。",
+  "丁":"丁火日主：如灯烛之火，细心体贴，适合服务、医疗、艺术行业。",
+  "戊":"戊土日主：如城墙大山，稳重可靠，适合管理、建筑、地产行业。",
+  "己":"己土日主：如田园沃土，包容细腻，适合教育、医疗、服务行业。",
+  "庚":"庚金日主：如刀剑利器，果断有魄力，适合军警、金融、工程行业。",
+  "辛":"辛金日主：如珠宝首饰，精致爱美感，适合艺术、设计、金融行业。",
+  "壬":"壬水日主：如大海江河，智慧包容，适合贸易、运输、咨询行业。",
+  "癸":"癸水日主：如雨露泉水，细腻敏感，适合学术、研究、服务行业。",
+};
+
+function startFullReading() {
+  var body = document.getElementById("game-body");
+  var dg = TIANGAN[Math.floor(Math.random()*10)];
+  var dz = DIZHI[Math.floor(Math.random()*12)];
+  var mg = TIANGAN[Math.floor(Math.random()*10)];
+  var mz = DIZHI[Math.floor(Math.random()*12)];
+  var hg = TIANGAN[Math.floor(Math.random()*10)];
+  var hz = DIZHI[Math.floor(Math.random()*12)];
+  // 年柱也随机
+  var yg = TIANGAN[Math.floor(Math.random()*10)];
+  var yz = DIZHI[Math.floor(Math.random()*12)];
+  var dm = dg.gan;
+  var report = "";
+  report += "===== 八字排盘 =====<br>";
+  report += "年柱：" + yg.gan + yz.zhi + "（祖先/少年）<br>";
+  report += "月柱：" + mg.gan + mz.zhi + "（父母/青年）<br>";
+  report += "日柱：" + dg.gan + dz.zhi + " ← 日主：" + dm + "<br>";
+  report += "时柱：" + hg.gan + hz.zhi + "（子女/晚年）<br><br>";
+  report += "===== 日主分析 =====<br>";
+  report += "日主：" + dm + "（" + WX_CN[dg.wuxing] + "）<br>";
+  report += (DAY_MASTER_DESC[dm] || "此人日主为" + dm + "。") + "<br><br>";
+  report += "===== 十神关系 =====<br>";
+  report += "年干" + yg.gan + "：" + getShiShen(dm, yg.gan) + "<br>";
+  report += "月干" + mg.gan + "：" + getShiShen(dm, mg.gan) + "<br>";
+  report += "时干" + hg.gan + "：" + getShiShen(dm, hg.gan) + "<br><br>";
+  report += "<span style='font-size:0.82rem;color:var(--ink-faint)'>提示：此为简化断局。真实命理需要看大运、流年、地支藏干等。</span>";
+  body.innerHTML = '<div class="final-report"><div class="fr-title">第8关：完整断局</div>'
+    + '<div class="fr-section"><div class="fr-section-title">排盘结果</div><div class="fr-section-text">' + report + '</div></div>'
+    + '<button class="tut-btn" onclick="completeCh8()">完成修行</button></div>';
+}
+
+function completeCh8() {
+  addExp("earth", 20); state.chapterCompleted[8] = true; saveState();
+  showResult("修行完成！", "恭喜你已通过所有关卡！<br><br>你已掌握周易八卦和八字的基础知识和操作方法。<br><br>继续练习，加深记忆。", "+20 土气");
+}
+
+// ===== 关闭 script 和 HTML =====
+</script>
+</body>
+</html>
